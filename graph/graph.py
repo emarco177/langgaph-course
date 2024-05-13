@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from langgraph.graph import END, StateGraph
 
+from graph.consts import RETRIEVE, GRADE_DOCUMENTS, GENERATE, WEBSEARCH
 from graph.nodes import generate, grade_documents, retrieve, web_search
 from graph.state import GraphState
 
@@ -8,50 +9,37 @@ load_dotenv()
 
 
 def decide_to_generate(state):
-    """
-    Determines whether to generate an answer, or add web search
-
-    Args:
-        state (dict): The current graph state
-
-    Returns:
-        str: Binary decision for next node to call
-    """
-
     print("---ASSESS GRADED DOCUMENTS---")
-    question = state["question"]
-    web_search = state["web_search"]
-    filtered_documents = state["documents"]
 
-    if web_search == "Yes":
+    if state["web_search"]:
         print(
-            "---DECISION: ALL DOCUMENTS ARE NOT RELEVANT TO QUESTION, INCLUDE WEB SEARCH---"
+            "---DECISION: NOT ALL DOCUMENTS ARE NOT RELEVANT TO QUESTION, INCLUDE WEB SEARCH---"
         )
-        return "websearch"
+        return WEBSEARCH
     else:
         print("---DECISION: GENERATE---")
-        return "generate"
+        return GENERATE
 
 
 workflow = StateGraph(GraphState)
 
-workflow.add_node("retrieve", retrieve)
-workflow.add_node("grade_documents", grade_documents)
-workflow.add_node("generate", generate)
-workflow.add_node("websearch", web_search)
+workflow.add_node(RETRIEVE, retrieve)
+workflow.add_node(GRADE_DOCUMENTS, grade_documents)
+workflow.add_node(GENERATE, generate)
+workflow.add_node(WEBSEARCH, web_search)
 
-workflow.set_entry_point("retrieve")
-workflow.add_edge("retrieve", "grade_documents")
+workflow.set_entry_point(RETRIEVE)
+workflow.add_edge(RETRIEVE, GRADE_DOCUMENTS)
 workflow.add_conditional_edges(
-    "grade_documents",
+    GRADE_DOCUMENTS,
     decide_to_generate,
     {
-        "websearch": "websearch",
-        "generate": "generate",
+        WEBSEARCH: WEBSEARCH,
+        GENERATE: GENERATE,
     },
 )
-workflow.add_edge("websearch", "generate")
-workflow.add_edge("generate", END)
+workflow.add_edge(WEBSEARCH, GENERATE)
+workflow.add_edge(GENERATE, END)
 
 app = workflow.compile()
 

@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+
+load_dotenv()
 from pprint import pprint
 
 from graph.graph import app
