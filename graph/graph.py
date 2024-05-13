@@ -1,10 +1,10 @@
 from dotenv import load_dotenv
-
-load_dotenv()
 from langgraph.graph import END, StateGraph
 
 from graph.nodes import generate, grade_documents, retrieve, web_search
 from graph.state import GraphState
+
+load_dotenv()
 
 
 def decide_to_generate(state):
