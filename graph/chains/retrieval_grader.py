@@ -26,4 +26,3 @@ grade_prompt = ChatPromptTemplate.from_messages(
 )
 
 retrieval_grader = grade_prompt | structured_llm_grader
-# print(retrieval_grader.invoke({"question": question, "document": doc_txt}))
