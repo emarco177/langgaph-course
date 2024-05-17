@@ -1,10 +1,15 @@
 
-# Advanced RAG
+# Advanced RAG control flow:
 
-This repository contains a refactored version of the original LangChain's notebooks,
+This repository contains a refactored version of the original [LangChain's Cookbook](https://github.com/mistralai/cookbook/tree/main/third_party/langchain),
 
 tailored towards developers and production-oriented applications for learning LangGraph🦜🕸️.
 
+Implemenation of Reflective RAG, Self-RAG & Adaptive RAG
+
+See Original YouTube video:
+
+[Advance RAG control flow with Mistral and LangChain: Corrective RAG, Self-RAG, Adaptive RAG](https://www.youtube.com/watch?v=sgnrL7yo1TE)
 
 
 ![Logo](https://github.com/emarco177/langgaph-course/blob/main/static/langgraph_adaptive_rag.png)
@@ -65,7 +70,7 @@ To run tests, run the following command
 ## Acknowledgements
 
 Original LangChain repository: [LangChain Cookbook](https://github.com/mistralai/cookbook/tree/main/third_party/langchain)
-
+![Logo](https://github.com/emarco177/langgaph-course/blob/main/static/LangChain-logo.png)
 
 
 
