@@ -5,8 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from graph.chains.generation import generation_chain
-from graph.chains.hallucination_grader import (GradeHallucinations,
-                                               hallucination_grader)
+from graph.chains.hallucination_grader import GradeHallucinations, hallucination_grader
 from graph.chains.retrieval_grader import GradeDocuments, retrieval_grader
 from ingestion import retriever
 
@@ -50,7 +49,7 @@ def test_hallucination_grader_answer_yes() -> None:
     res: GradeHallucinations = hallucination_grader.invoke(
         {"documents": docs, "generation": generation}
     )
-    assert res.binary_score == "yes"
+    assert res.binary_score
 
 
 def test_hallucination_grader_answer_no() -> None:
@@ -63,4 +62,4 @@ def test_hallucination_grader_answer_no() -> None:
             "generation": "In order to make pizza we need to first start with the dough",
         }
     )
-    assert res.binary_score == "no"
+    assert not res.binary_score
