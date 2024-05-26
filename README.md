@@ -10,7 +10,7 @@ See Original YouTube video:[Advance RAG control flow with Mistral and LangChain]
 of [Sophia Young](https://x.com/sophiamyang) from Mistral & [Lance Martin](https://x.com/RLanceMartin) from LangChain
 
 ![Logo](https://github.com/emarco177/langgaph-course/blob/main/static/langgraph_adaptive_rag.png)
-[![udemy](https://img.shields.io/badge/LangGraph%20Udemy%20Course-Coupon%20%2412.99-brightgreen)](https://www.udemy.com/course/langgraph/?referralCode=FEA50E8CBA24ECD48212)
+
 
 
 ## Features
