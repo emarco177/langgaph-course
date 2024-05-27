@@ -2,7 +2,7 @@
 # Advanced RAG control flow with LangGraph🦜🕸:
 
 Implementation of Reflective RAG, Self-RAG & Adaptive RAG tailored towards developers and production-oriented 
-applications for learning LangGraph🦜🕸️.
+applications for learning LangGraph🦜🕸️, with Quix capability to ingest urls from a kafka topic using a consumer.
 
 This repository contains a refactored version of the original [LangChain's Cookbook](https://github.com/mistralai/cookbook/tree/main/third_party/langchain),
 
