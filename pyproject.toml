@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "langgaph-course"
+name = "crag_srag_arag"
 version = "0.1.0"
 description = ""
 authors = ["Eden Marco <emarco177@gmail.com>"]
@@ -20,6 +20,9 @@ python-dotenv = "^1.0.1"
 black = "^24.4.2"
 isort = "^5.13.2"
 pytest = "^8.2.0"
+quixstreams = "^2.5.1"
+psutil = "^5.9.8"
+pandas = "^2.2.2"
 
 [build-system]
 requires = ["poetry-core"]

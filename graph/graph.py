@@ -29,7 +29,6 @@ def grade_generation_grounded_in_documents_and_question(state: GraphState) -> st
     question = state["question"]
     documents = state["documents"]
     generation = state["generation"]
-
     score = hallucination_grader.invoke(
         {"documents": documents, "generation": generation}
     )
@@ -40,13 +39,18 @@ def grade_generation_grounded_in_documents_and_question(state: GraphState) -> st
         score = answer_grader.invoke({"question": question, "generation": generation})
         if answer_grade := score.binary_score:
             print("---DECISION: GENERATION ADDRESSES QUESTION---")
-            return "useful"
+            decision = "useful"
+            # return "useful"
         else:
             print("---DECISION: GENERATION DOES NOT ADDRESS QUESTION---")
-            return "not useful"
+            decision = "not useful"
+            # return "not useful"
     else:
         print("---DECISION: GENERATION IS NOT GROUNDED IN DOCUMENTS, RE-TRY---")
-        return "not supported"
+        decision = "not supported"
+        #
+    print(f"decision is {decision}")
+    return decision
 
 
 def route_question(state: GraphState):
@@ -55,10 +59,14 @@ def route_question(state: GraphState):
     source = question_router.invoke({"question": question})
     if source.datasource == "websearch":
         print("---ROUTE QUESTION TO WEB SEARCH---")
-        return "websearch"
+        decision = "websearch"
+        # return "websearch"
     elif source.datasource == "vectorstore":
         print("---ROUTE QUESTION TO RAG---")
-        return "retrieve"
+        decision = "retrieve"
+        # return "retrieve"
+    print(f"decision is {decision}")
+    return decision
 
 
 workflow = StateGraph(GraphState)
