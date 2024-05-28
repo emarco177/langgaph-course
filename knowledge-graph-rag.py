@@ -1,5 +1,63 @@
 # Python code to demonstrate the creation of a document hierarchy in a knowledge graph for legal documents
 from py2neo import Graph, Node, Relationship
+from pinecone import Pinecone, ServerlessSpec
+from dotenv import load_dotenv
+
+load_dotenv()
+
+def update_vectorDB():
+    # Inicializa Pinecone
+    pc = Pinecone()
+    index_name = "my-index"
+    try:
+        index = pc.Index(index_name)
+        update_pinecone_index(index)
+    except Exception as e:
+        print(e)
+        create_pinecone_index(index_name, pc)
+        index = pc.Index(index_name)
+        update_pinecone_index(index)
+    print("Index updated")
+
+def update_pinecone_index(index):
+    # Lee los nodos del archivo CSV
+    with open('nodes.csv', 'r') as file:
+        for line in file:
+            node_data = line.strip().split(',')
+            node_id = node_data[0]
+            node_vector = [float(x) for x in node_data[1:]]
+            node_metadata = {
+                "type": "node",
+                "label": node_data[0]  # Asume que la etiqueta del nodo está en la primera columna
+            }
+            index.upsert([(node_id, node_vector, node_metadata)])
+    # Lee las relaciones del archivo CSV
+    with open('relationships.csv', 'r') as file:
+        for line in file:
+            rel_data = line.strip().split(',')
+            source_id = rel_data[0]
+            target_id = rel_data[1]
+            rel_vector = [float(x) for x in rel_data[2:]]
+            rel_metadata = {
+                "type": "relationship",
+                "source": source_id,
+                "target": target_id,
+                "label": rel_data[2]  # Asume que la etiqueta de la relación está en la tercera columna
+            }
+            index.upsert([(source_id + "-" + target_id, rel_vector, rel_metadata)])
+
+def create_pinecone_index(index_name, pc):
+
+    pc.create_index(
+        name=index_name,
+        dimension=8,  # Replace with your model dimensions
+        metric="euclidean",  # Replace with your model metric
+        spec=ServerlessSpec(
+            cloud="aws",
+            region="us-east-1"
+        )
+    )
+
 
 
 # Python code to demonstrate query augmentation using a knowledge graph
@@ -64,6 +122,35 @@ def integrate_data(data):
     update_knowledge_graph(new_financial_regulation)
 
 
+def export_graph_to_csv(graph, output_dir):
+    """
+    Exporta el grafo de Neo4j a archivos CSV.
+
+    Args:
+        graph (py2neo.Graph): Objeto Graph de la conexión a Neo4j.
+        output_dir (str): Directorio de salida para los archivos CSV.
+    """
+    # Exportar nodos
+    nodes = graph.run("MATCH (n) RETURN n").data()
+    with open(f"{output_dir}/nodes.csv", "w", encoding="utf-8") as f:
+        f.write("id,label")
+        for node in nodes:
+            node_data = node["n"]
+            node_id = str(node_data.identity)
+            node_label = node_data.labels
+            f.write(f"\n{node_id},{node_label}")
+
+    # Exportar relaciones
+    rels = graph.run("MATCH ()-[r]->() RETURN r").data()
+    with open(f"{output_dir}/relationships.csv", "w", encoding="utf-8") as f:
+        f.write("source,target,type")
+        for rel in rels:
+            rel_data = rel["r"]
+            source_id = str(rel_data.start_node.identity)
+            target_id = str(rel_data.end_node.identity)
+            rel_type = rel_data.type
+            f.write(f"\n{source_id},{target_id},{rel_type}")
+
 def main():
     # Connect to a Neo4j database
     graph = Graph("bolt://localhost:7687", auth=("neo4j", "password"))
@@ -97,6 +184,10 @@ def main():
     # Execute query planning
     detailed_response = plan_query(another_query)
     print(detailed_response)
+
+    # Exportar el grafo a CSV
+    export_graph_to_csv(graph, "./")
+    update_vectorDB()
 
 
 if __name__ == "__main__":

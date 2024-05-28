@@ -25,6 +25,8 @@ psutil = "^5.9.8"
 pandas = "^2.2.2"
 neo4j = "^5.20.0"
 py2neo = "^2021.2.4"
+pinecone = "^4.0.0"
+pinecone-client = "^4.1.0"
 
 [build-system]
 requires = ["poetry-core"]
