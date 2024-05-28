@@ -2,6 +2,19 @@
 from py2neo import Graph, Node, Relationship
 from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
+import py2neo
+
+from langchain.graphs import Neo4jGraph
+import requests
+import os
+from langchain_community.vectorstores import Neo4jVector
+from langchain_community.embeddings import OpenAIEmbeddings
+from langchain.chains import RetrievalQA
+from langchain_community.chat_models import ChatOpenAI
+from langchain.chains import GraphCypherQAChain
+from langchain.agents import initialize_agent, Tool
+from langchain.agents import AgentType
+
 
 load_dotenv()
 
@@ -22,22 +35,27 @@ def update_vectorDB():
 def update_pinecone_index(index):
     # Lee los nodos del archivo CSV
     with open('nodes.csv', 'r') as file:
-        for line in file:
-            node_data = line.strip().split(',')
-            node_id = node_data[0]
-            node_vector = [float(x) for x in node_data[1:]]
-            node_metadata = {
-                "type": "node",
-                "label": node_data[0]  # Asume que la etiqueta del nodo está en la primera columna
-            }
-            index.upsert([(node_id, node_vector, node_metadata)])
+        readlines = file.readlines()
+        for line in readlines:
+            if line.startswith('#'):
+                continue
+            else:
+                node_data = line.strip().split(',')
+                node_id = node_data[0]
+                node_vector = [str(x) for x in node_data[1:]]
+                node_metadata = {
+                    "type": "node",
+                    "label": node_data[0]  # Asume que la etiqueta del nodo está en la primera columna
+                }
+                index.upsert([(node_id, node_vector, node_metadata)])
+
     # Lee las relaciones del archivo CSV
     with open('relationships.csv', 'r') as file:
         for line in file:
             rel_data = line.strip().split(',')
             source_id = rel_data[0]
             target_id = rel_data[1]
-            rel_vector = [float(x) for x in rel_data[2:]]
+            rel_vector = [str(x) for x in rel_data[2:]]
             rel_metadata = {
                 "type": "relationship",
                 "source": source_id,
@@ -47,16 +65,20 @@ def update_pinecone_index(index):
             index.upsert([(source_id + "-" + target_id, rel_vector, rel_metadata)])
 
 def create_pinecone_index(index_name, pc):
-
-    pc.create_index(
-        name=index_name,
-        dimension=8,  # Replace with your model dimensions
-        metric="euclidean",  # Replace with your model metric
-        spec=ServerlessSpec(
-            cloud="aws",
-            region="us-east-1"
+    index = pc.Index(index_name)
+    if index.exists:
+        print("Index already exists, skipping creation")
+    else:
+        print("Creating index")
+        pc.create_index(
+            name=index_name,
+            dimension=8,  # Replace with your model dimensions
+            metric="euclidean",  # Replace with your model metric
+            spec=ServerlessSpec(
+                cloud="aws",
+                region="us-east-1"
+            )
         )
-    )
 
 
 
@@ -133,7 +155,7 @@ def export_graph_to_csv(graph, output_dir):
     # Exportar nodos
     nodes = graph.run("MATCH (n) RETURN n").data()
     with open(f"{output_dir}/nodes.csv", "w", encoding="utf-8") as f:
-        f.write("id,label")
+        f.write("#id,label")
         for node in nodes:
             node_data = node["n"]
             node_id = str(node_data.identity)
@@ -143,7 +165,7 @@ def export_graph_to_csv(graph, output_dir):
     # Exportar relaciones
     rels = graph.run("MATCH ()-[r]->() RETURN r").data()
     with open(f"{output_dir}/relationships.csv", "w", encoding="utf-8") as f:
-        f.write("source,target,type")
+        f.write("#source,target,type")
         for rel in rels:
             rel_data = rel["r"]
             source_id = str(rel_data.start_node.identity)
@@ -186,10 +208,124 @@ def main():
     print(detailed_response)
 
     # Exportar el grafo a CSV
-    export_graph_to_csv(graph, "./")
-    update_vectorDB()
+    # export_graph_to_csv(graph, "./")
+    # update_vectorDB()
 
+    # Crea una instancia de la base de datos Pinecone
+    graph_pinecone = py2neo.Graph()
+    # Crea un nodo en la base de datos
+    nodo1 = py2neo.Node("Persona")
+    nodo1["nombre"] = "John"
+    nodo1["edad"] = 30
+    # Crea un nodo en la base de datos
+    nodo2 = py2neo.Node("Persona")
+    nodo2["nombre"] = "Jane"
+    nodo2["edad"] = 25
+    # Crea una relación entre los nodos
+    rel = py2neo.Relationship(nodo1, "Conocido", nodo2)
+    # Guarda los datos en Pinecone
+    graph_pinecone.commit()
+
+
+
+
+def neo4j():
+    url = "bolt://localhost:7687"
+    username = "neo4j"
+    password = "password"
+
+    graph = Neo4jGraph(
+        url=url,
+        username=username,
+        password=password
+    )
+    url = "https://gist.githubusercontent.com/tomasonjo/08dc8ba0e19d592c4c3cde40dd6abcc3/raw/da8882249af3e819a80debf3160ebbb3513ee962/microservices.json"
+    import_query = requests.get(url).json()['query']
+    graph.query(
+        import_query
+    )
+    # os.environ['OPENAI_API_KEY'] = "OPENAI_API_KEY"
+
+    vector_index = Neo4jVector.from_existing_graph(
+        OpenAIEmbeddings(),
+        url=url,
+        username=username,
+        password=password,
+        index_name='tasks',
+        node_label="Task",
+        text_node_properties=['name', 'description', 'status'],
+        embedding_node_property='embedding',
+    )
+
+    response = vector_index.similarity_search(
+        "How will RecommendationService be updated?"
+    )
+    print(response[0].page_content)
+    # name: BugFix
+    # description: Add a new feature to RecommendationService to provide ...
+    # status: In Progress
+    vector_qa = RetrievalQA.from_chain_type(
+        llm=ChatOpenAI(),
+        chain_type="stuff",
+        retriever=vector_index.as_retriever()
+    )
+    vector_qa.run(
+        "How will recommendation service be updated?")
+    vector_qa.run(
+        "How many open tickets are there?"
+    )
+    graph.query(
+        "MATCH (t:Task {status:'Open'}) RETURN count(*)"
+    )
+    graph.refresh_schema()
+
+    cypher_chain = GraphCypherQAChain.from_llm(
+        cypher_llm=ChatOpenAI(temperature=0, model_name='gpt-4'),
+        qa_llm=ChatOpenAI(temperature=0), graph=graph, verbose=True,
+    )
+    cypher_chain.run(
+        "How many open tickets there are?"
+    )
+    cypher_chain.run(
+        "Which team has the most open tasks?"
+    )
+    cypher_chain.run(
+        "Which services depend on Database directly?"
+    )
+    cypher_chain.run(
+        "Which services depend on Database indirectly?"
+    )
+    tools = [
+        Tool(
+            name="Tasks",
+            func=vector_qa.run,
+            description="""Useful when you need to answer questions about descriptions of tasks.
+            Not useful for counting the number of tasks.
+            Use full question as input.
+            """,
+        ),
+        Tool(
+            name="Graph",
+            func=cypher_chain.run,
+            description="""Useful when you need to answer questions about microservices,
+            their dependencies or assigned people. Also useful for any sort of 
+            aggregation like counting the number of tasks, etc.
+            Use full question as input.
+            """,
+        ),
+    ]
+
+    mrkl = initialize_agent(
+        tools,
+        ChatOpenAI(temperature=0, model_name='gpt-4'),
+        agent=AgentType.OPENAI_FUNCTIONS, verbose=True
+    )
+    response = mrkl.run("Which team is assigned to maintain PaymentService?")
+    print(response)
+    response = mrkl.run("Which tasks have optimization in their description?")
+    print(response)
 
 if __name__ == "__main__":
-    main()
+    # main()
+    neo4j()
     print("Done")
