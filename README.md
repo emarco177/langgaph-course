@@ -21,7 +21,7 @@ of [Sophia Young](https://x.com/sophiamyang) from Mistral & [Lance Martin](https
 
 To run this project, you will need to add the following environment variables to your .env file
 
-`PYTHONPATH=/{YOUR_PATH_TO_PROJECT}/langgaph-course langgraph-course`
+`PYTHONPATH=/{YOUR_PATH_TO_PROJECT}/langgraph-course`
 
 `OPENAI_API_KEY`
 
@@ -32,7 +32,7 @@ To run this project, you will need to add the following environment variables to
 Clone the project
 
 ```bash
-  git clone https://github.com/emarco177/langgraph-course.git
+  git clone https://github.com/emarco177/langgaph-course.git langgraph-course
 ```
 
 Go to the project directory
