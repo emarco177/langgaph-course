@@ -23,6 +23,8 @@ pytest = "^8.2.0"
 quixstreams = "^2.5.1"
 psutil = "^5.9.8"
 pandas = "^2.2.2"
+neo4j = "^5.20.0"
+py2neo = "^2021.2.4"
 
 [build-system]
 requires = ["poetry-core"]
