@@ -32,6 +32,10 @@ In real life, quix_producer should a web crawler looking for relevant data and p
 - **Documentation**: Detailed documentation and branches guides developers through setting up the environment, 
 - understanding the codebase, and utilizing LangGraph effectively.
 - **Real time ingestion: The code use quix to ingest urls from kafka**
+- **Interaction with NEO4j**: The code insert data into a neo4j database, local and remote, and then interact with
+  Chat-GPT-4 model to generate a response to the user. Local version dont interact with the model, only the remote one.
+- Create an account in the neo4j cloud and create a new project. (https://console.neo4j.io/)
+- Download your neo4j instance into your machine. (https://neo4j.com/download/)
 
 ## Environment Variables
 
@@ -44,6 +48,12 @@ To run this project, you will need to add the following environment variables to
 `TAVILY_API_KEY`
 
 `QUIX_SDK_TOKEN`
+
+`remote_neo4j_password`
+
+`remote_neo4j_url`
+
+`remote_neo4j_username`
 
 ## QUIX TOPIC
 
