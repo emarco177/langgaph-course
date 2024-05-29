@@ -3,6 +3,8 @@
 
 Implementation of Reflective RAG, Self-RAG & Adaptive RAG tailored towards developers and production-oriented 
 applications for learning LangGraph🦜🕸️, with Quix capability to ingest urls from a kafka topic using a consumer.
+Added a sample of a neo4j client to insert data into a neo4j database, local and remote.
+The remote neo4j interacts with Chat-GPT-4 model to generate a response to the user.
 
 This repository contains a refactored version of the original [LangChain's Cookbook](https://github.com/mistralai/cookbook/tree/main/third_party/langchain),
 
