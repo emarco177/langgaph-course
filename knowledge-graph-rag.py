@@ -1,4 +1,5 @@
 # Python code to demonstrate the creation of a document hierarchy in a knowledge graph for legal documents
+from langchain_core.prompts import ChatPromptTemplate
 from py2neo import Graph, Node, Relationship
 from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
@@ -8,61 +9,14 @@ from langchain.graphs import Neo4jGraph
 import requests
 import os
 from langchain_community.vectorstores import Neo4jVector
-from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain.chains import RetrievalQA
-from langchain_community.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.chains import GraphCypherQAChain
-from langchain.agents import initialize_agent, Tool
+from langchain.agents import initialize_agent, Tool, create_react_agent, create_openai_functions_agent
 from langchain.agents import AgentType
 
-
 load_dotenv()
-
-def update_vectorDB():
-    # Inicializa Pinecone
-    pc = Pinecone()
-    index_name = "my-index"
-    try:
-        index = pc.Index(index_name)
-        update_pinecone_index(index)
-    except Exception as e:
-        print(e)
-        create_pinecone_index(index_name, pc)
-        index = pc.Index(index_name)
-        update_pinecone_index(index)
-    print("Index updated")
-
-def update_pinecone_index(index):
-    # Lee los nodos del archivo CSV
-    with open('nodes.csv', 'r') as file:
-        readlines = file.readlines()
-        for line in readlines:
-            if line.startswith('#'):
-                continue
-            else:
-                node_data = line.strip().split(',')
-                node_id = node_data[0]
-                node_vector = [str(x) for x in node_data[1:]]
-                node_metadata = {
-                    "type": "node",
-                    "label": node_data[0]  # Asume que la etiqueta del nodo está en la primera columna
-                }
-                index.upsert([(node_id, node_vector, node_metadata)])
-
-    # Lee las relaciones del archivo CSV
-    with open('relationships.csv', 'r') as file:
-        for line in file:
-            rel_data = line.strip().split(',')
-            source_id = rel_data[0]
-            target_id = rel_data[1]
-            rel_vector = [str(x) for x in rel_data[2:]]
-            rel_metadata = {
-                "type": "relationship",
-                "source": source_id,
-                "target": target_id,
-                "label": rel_data[2]  # Asume que la etiqueta de la relación está en la tercera columna
-            }
-            index.upsert([(source_id + "-" + target_id, rel_vector, rel_metadata)])
 
 def create_pinecone_index(index_name, pc):
     index = pc.Index(index_name)
@@ -79,7 +33,6 @@ def create_pinecone_index(index_name, pc):
                 region="us-east-1"
             )
         )
-
 
 
 # Python code to demonstrate query augmentation using a knowledge graph
@@ -173,19 +126,26 @@ def export_graph_to_csv(graph, output_dir):
             rel_type = rel_data.type
             f.write(f"\n{source_id},{target_id},{rel_type}")
 
-def main():
+
+def neo4j_local():
     # Connect to a Neo4j database
     graph = Graph("bolt://localhost:7687", auth=("neo4j", "password"))
-
     # Create nodes
     tort_law = Node("Law", name="Tort Law")
     civil_rights = Node("Law", name="Civil Rights Law")
     case_study = Node("Document", name="Case Study on Civil Rights")
-
     # Create relationships
-    graph.create(Relationship(tort_law, "RELATED_TO", civil_rights))
-    graph.create(Relationship(civil_rights, "HAS_DOCUMENT", case_study))
-
+    related_to_rel = Relationship(tort_law, "RELATED_TO", civil_rights)
+    has_document_rel = Relationship(civil_rights, "HAS_DOCUMENT", case_study)
+    tx = graph.begin()
+    # Crear una transacción y ejecutar las operaciones
+    tx.create(tort_law)
+    tx.create(civil_rights)
+    tx.create(case_study)
+    tx.create(related_to_rel)
+    tx.create(has_document_rel)
+    graph.commit(tx)
+    print("graph created")
     # Query to retrieve related documents
     query = """
     MATCH (l:Law {name: 'Civil Rights Law'})-[:HAS_DOCUMENT]->(d)
@@ -207,44 +167,21 @@ def main():
     detailed_response = plan_query(another_query)
     print(detailed_response)
 
-    # Exportar el grafo a CSV
-    # export_graph_to_csv(graph, "./")
-    # update_vectorDB()
 
-    # Crea una instancia de la base de datos Pinecone
-    graph_pinecone = py2neo.Graph()
-    # Crea un nodo en la base de datos
-    nodo1 = py2neo.Node("Persona")
-    nodo1["nombre"] = "John"
-    nodo1["edad"] = 30
-    # Crea un nodo en la base de datos
-    nodo2 = py2neo.Node("Persona")
-    nodo2["nombre"] = "Jane"
-    nodo2["edad"] = 25
-    # Crea una relación entre los nodos
-    rel = py2neo.Relationship(nodo1, "Conocido", nodo2)
-    # Guarda los datos en Pinecone
-    graph_pinecone.commit()
-
-
-
-
-def neo4j():
-    url = "bolt://localhost:7687"
-    username = "neo4j"
-    password = "password"
+def neo4j_remote():
+    print("demo neo4j...")
+    url = os.getenv("remote_neo4j_url")
+    username = os.getenv("remote_neo4j_username")
+    password = os.getenv("remote_neo4j_password")
 
     graph = Neo4jGraph(
         url=url,
         username=username,
         password=password
     )
-    url = "https://gist.githubusercontent.com/tomasonjo/08dc8ba0e19d592c4c3cde40dd6abcc3/raw/da8882249af3e819a80debf3160ebbb3513ee962/microservices.json"
-    import_query = requests.get(url).json()['query']
-    graph.query(
-        import_query
-    )
-    # os.environ['OPENAI_API_KEY'] = "OPENAI_API_KEY"
+    data_url = "https://gist.githubusercontent.com/tomasonjo/08dc8ba0e19d592c4c3cde40dd6abcc3/raw/da8882249af3e819a80debf3160ebbb3513ee962/microservices.json"
+    import_query = requests.get(data_url).json()['query']
+    graph.query(import_query)
 
     vector_index = Neo4jVector.from_existing_graph(
         OpenAIEmbeddings(),
@@ -256,11 +193,12 @@ def neo4j():
         text_node_properties=['name', 'description', 'status'],
         embedding_node_property='embedding',
     )
-
-    response = vector_index.similarity_search(
-        "How will RecommendationService be updated?"
-    )
-    print(response[0].page_content)
+    query = "How will RecommendationService be updated?"
+    print(f"query is {query}")
+    response = vector_index.similarity_search(query)
+    for result in response:
+        print(result.page_content)
+    #print(response[0].page_content)
     # name: BugFix
     # description: Add a new feature to RecommendationService to provide ...
     # status: In Progress
@@ -269,32 +207,40 @@ def neo4j():
         chain_type="stuff",
         retriever=vector_index.as_retriever()
     )
-    vector_qa.run(
-        "How will recommendation service be updated?")
-    vector_qa.run(
-        "How many open tickets are there?"
-    )
-    graph.query(
-        "MATCH (t:Task {status:'Open'}) RETURN count(*)"
-    )
+    query = "How will recommendation service be updated?"
+    print(f"query is {query}")
+    response = vector_qa.invoke(query)
+    print(response)
+    query = "How many open tickets are there?"
+    print(f"query is {query}")
+
+    response = vector_qa.invoke(query)
+    print(response)
+    query = "MATCH (t:Task {status:'Open'}) RETURN count(*)"
+    print(f"query is {query}")
+    graph.query(query)
     graph.refresh_schema()
 
     cypher_chain = GraphCypherQAChain.from_llm(
         cypher_llm=ChatOpenAI(temperature=0, model_name='gpt-4'),
         qa_llm=ChatOpenAI(temperature=0), graph=graph, verbose=True,
     )
-    cypher_chain.run(
-        "How many open tickets there are?"
-    )
-    cypher_chain.run(
-        "Which team has the most open tasks?"
-    )
-    cypher_chain.run(
-        "Which services depend on Database directly?"
-    )
-    cypher_chain.run(
-        "Which services depend on Database indirectly?"
-    )
+    query = "How many open tickets there are?"
+    print(f"query is {query}")
+    response = cypher_chain.invoke(query)
+    print(response)
+    query = "Which team has the most open tasks?"
+    print(f"query is {query}")
+    response = cypher_chain.invoke(query)
+    print(response)
+    query = "Which services depend on Database directly?"
+    print(f"query is {query}")
+    response = cypher_chain.invoke(query)
+    print(response)
+    query = "Which services depend on Database indirectly?"
+    print(f"query is {query}")
+    response = cypher_chain.invoke(query)
+    print(response)
     tools = [
         Tool(
             name="Tasks",
@@ -314,18 +260,44 @@ def neo4j():
             """,
         ),
     ]
+    # Crear un ChatPromptTemplate
+    prompt_template = ChatPromptTemplate.from_messages([
+        ("system", "You are a helpful AI assistant. Use the provided tools to answer the user's questions."),
+        ("user", "{input}"),
+        ("assistant", "{agent_scratchpad}")
+    ])
+    # Inicializar el modelo LLM correctamente
+    llm = ChatOpenAI(temperature=0, model_name='gpt-4')
+    """
+    # Crear el agente usando el nuevo método
+    mrkl = create_openai_functions_agent(
+        tools=tools,
+        llm=llm,
+        prompt=prompt_template
+    )
 
+    """
     mrkl = initialize_agent(
         tools,
-        ChatOpenAI(temperature=0, model_name='gpt-4'),
+        llm,
         agent=AgentType.OPENAI_FUNCTIONS, verbose=True
     )
-    response = mrkl.run("Which team is assigned to maintain PaymentService?")
+
+    query = "Which team is assigned to maintain PaymentService?"
+    print(f"query is {query}")
+    response = mrkl.invoke(query)
     print(response)
-    response = mrkl.run("Which tasks have optimization in their description?")
+    query = "Which tasks have optimization in their description?"
+    print(f"query is {query}")
+    response = mrkl.invoke(query)
     print(response)
 
+
 if __name__ == "__main__":
-    # main()
-    neo4j()
+    '''
+    la funcion local está basada en 
+    https://sunila-gollapudi.medium.com/using-knowledge-graphs-to-enhance-retrieval-augmented-generation-rag-systems-14197efc1bab
+    '''
+    neo4j_local()
+    neo4j_remote()
     print("Done")
