@@ -170,15 +170,18 @@ def neo4j_local():
 
 def neo4j_remote():
     print("demo neo4j...")
+
     url = os.getenv("remote_neo4j_url")
     username = os.getenv("remote_neo4j_username")
     password = os.getenv("remote_neo4j_password")
+
 
     graph = Neo4jGraph(
         url=url,
         username=username,
         password=password
     )
+
     data_url = "https://gist.githubusercontent.com/tomasonjo/08dc8ba0e19d592c4c3cde40dd6abcc3/raw/da8882249af3e819a80debf3160ebbb3513ee962/microservices.json"
     import_query = requests.get(data_url).json()['query']
     graph.query(import_query)

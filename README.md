@@ -96,8 +96,13 @@ Run original ingestion and main process.
   poetry run python ingest.py
   poetry run python main.py
 ```
+```bash
 
-
+  export remote_neo4j_url=value1
+  export remote_neo4j_username=value2
+  export remote_neo4j_password=value2
+  poetry run python knowledge-graph-rag.py
+```
 ## Running Tests
 
 To run tests, run the following command
