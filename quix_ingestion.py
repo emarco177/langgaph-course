@@ -20,7 +20,7 @@ def main():
     kafka_app = Application(
         quix_sdk_token=os.getenv("QUIX_SDK_TOKEN"),
         consumer_group="csv_sample",
-        #auto_offset_reset=AutoOffsetReset.latest,
+        # auto_offset_reset=AutoOffsetReset.latest,
         auto_create_topics=False,
     )
 
