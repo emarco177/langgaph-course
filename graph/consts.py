@@ -1,3 +1,5 @@
+START="start"
+ROUTE_QUESTION="route_question"
 RETRIEVE = "retrieve"
 GRADE_DOCUMENTS = "grade_documents"
 GENERATE = "generate"
