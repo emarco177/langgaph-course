@@ -7,8 +7,13 @@ from graph.chains.router import question_router, RouteQuery
 from graph.consts import GENERATE, GRADE_DOCUMENTS, RETRIEVE, WEBSEARCH
 from graph.nodes import generate, grade_documents, retrieve, web_search
 from graph.state import GraphState
+from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.checkpoint import MemorySaver
+
 
 load_dotenv()
+memory = SqliteSaver.from_conn_string(":memory:")
+memory = MemorySaver()
 
 
 def decide_to_generate(state):
@@ -96,6 +101,6 @@ workflow.add_conditional_edges(
 )
 
 
-app = workflow.compile()
+app = workflow.compile(checkpointer=memory)
 
 app.get_graph().draw_mermaid_png(output_file_path="graph.png")

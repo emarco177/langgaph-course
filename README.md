@@ -53,7 +53,7 @@ Install dependencies
 Start the flask server
 
 ```bash
-  poetry run app.py
+  poetry run main.py
 ```
 
 
