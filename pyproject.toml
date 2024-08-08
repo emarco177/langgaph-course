@@ -22,9 +22,10 @@ pypdf = "^4.3.1"
 faiss-cpu = "^1.8.0.post1"
 langchain-chroma = "^0.1.2"
 langchain = "^0.2.12"
-langgraph = "^0.1.19"
 langchain-community = "^0.2.11"
 langchainhub = "^0.1.20"
+langgraph = "^0.2.3"
+langgraph-checkpoint-sqlite = "^1.0.0"
 
 [build-system]
 requires = ["poetry-core"]

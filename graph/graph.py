@@ -1,4 +1,6 @@
 from dotenv import load_dotenv
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import END, StateGraph
 
 from graph.chains.answer_grader import answer_grader
@@ -7,9 +9,6 @@ from graph.chains.router import question_router, RouteQuery
 from graph.consts import GENERATE, GRADE_DOCUMENTS, RETRIEVE, WEBSEARCH
 from graph.nodes import generate, grade_documents, retrieve, web_search
 from graph.state import GraphState
-from langgraph.checkpoint.sqlite import SqliteSaver
-from langgraph.checkpoint import MemorySaver
-
 
 load_dotenv()
 memory = SqliteSaver.from_conn_string(":memory:")
