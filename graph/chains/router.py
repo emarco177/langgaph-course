@@ -14,7 +14,7 @@ class RouteQuery(BaseModel):
     )
 
 
-llm = ChatOpenAI(temperature=0)
+llm = ChatOpenAI(model="o4-mini")
 structured_llm_router = llm.with_structured_output(RouteQuery)
 
 system = """You are an expert at routing a user question to a vectorstore or web search.
