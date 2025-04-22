@@ -23,6 +23,6 @@ def triple(num: float) -> float:
 
 tools = [TavilySearch(max_results=1), triple]
 
-llm = ChatOpenAI(model="o4-mini")
+llm = ChatOpenAI(model="gpt-4o-mini")
 
 react_agent_runnable = create_react_agent(llm, tools, react_prompt)
