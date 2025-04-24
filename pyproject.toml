@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "reflection-agent"
+version = "0.1.0"
+description = ""
+authors = ["Eden Marco <emarco177@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+python-dotenv = "*"
+black = "*"
+isort = "*"
+langchain = "*"
+langchain-openai = "*"
+langgraph = "*"
+grandalf = "*"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
