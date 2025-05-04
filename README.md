@@ -3,9 +3,9 @@
 
 ![Logo](https://github.com/emarco177/langgraph-course/blob/main/banner.png)
 
-[![Udemy](https://img.shields.io/badge/Udemy-Course-EC5252?style=for-the-badge&logo=udemy&logoColor=white)](https://www.udemy.com/course/langgraph/?couponCode=APRIL-2025) 
+[![Udemy](https://img.shields.io/badge/Udemy-Course-EC5252?style=for-the-badge&logo=udemy&logoColor=white)](https://www.udemy.com/course/langgraph/?couponCode=MAY-2025) 
 [![Rating](https://img.shields.io/badge/Rating-4.7/5-brightgreen?style=for-the-badge)](https://www.udemy.com/course/langgraph/) 
-[![Students](https://img.shields.io/badge/Students-13K+-blue?style=for-the-badge)](https://www.udemy.com/course/langgraph/?couponCode=APRIL-2025)
+[![Students](https://img.shields.io/badge/Students-13K+-blue?style=for-the-badge)](https://www.udemy.com/course/langgraph/?couponCode=MAY-2025)
 [![Twitter](https://img.shields.io/twitter/follow/EdenEmarco177?label=Follow&style=social)](https://twitter.com/EdenEmarco177)
 
 > **Build production-grade AI agents—fast.** This repository is the hands-on companion to my Udemy bestseller. Every branch is a *project*, every commit is a *lesson*. Clone it, code along, and ship your own LangGraph agents.
