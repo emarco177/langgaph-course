@@ -75,7 +75,7 @@ workflow.set_conditional_entry_point(
         RETRIEVE: RETRIEVE,
     },
 )
-workflow.set_entry_point(RETRIEVE)
+#workflow.set_entry_point(RETRIEVE)
 workflow.add_edge(RETRIEVE, GRADE_DOCUMENTS)
 workflow.add_conditional_edges(
     GRADE_DOCUMENTS,
